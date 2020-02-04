@@ -117,9 +117,12 @@ def copy_template_file(filename, destination_subdirectory='', ask_to_edit=True):
 	# Open the template version
 	with open(template_file, 'r') as file:
 		filedata = file.read()
-	# Replace the APPNAME variable
-	filedata = filedata.replace('APPNAME', args.app_name)
-	filedata = filedata.replace('APPHEADER_LINE', '='*len(args.app_name))
+	# Replace the {app_name} and {app_header_line} variables
+	filedata = filedata.format(
+		app_name=args.app_name,
+		package_prefix=package_prefix,
+		app_header_line='='*len(args.app_name)
+	)
 	# Write the modified version to the new app's dir
 	with open(destination_file, 'w') as file:
 		file.write(filedata)

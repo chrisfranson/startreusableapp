@@ -1,5 +1,5 @@
 include LICENSE
-recursive-include APPNAME/static *
-recursive-include APPNAME/templates *
 include README.md
+recursive-include {app_name}/static *
+recursive-include {app_name}/templates *
 recursive-include docs *
