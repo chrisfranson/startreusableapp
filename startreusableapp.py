@@ -12,20 +12,32 @@ args = parser.parse_args()
 # Important directories
 this_script_dir = os.path.dirname(os.path.realpath(__file__))
 initial_cwd = os.getcwd()
-repo_dir = os.path.normpath("{}/{}/django-{}".format(args.app_dir, args.app_name, args.app_name))
-app_dir = os.path.normpath(repo_dir + '/{}'.format(args.app_name))
-project_dir = os.path.normpath("{}/{}/Project".format(args.app_dir, args.app_name))
+repo_dir = ''
+app_dir = ''
+project_dir = ''
+
+# More user config
 editor = 'nano'
+package_prefix = ''
+
 
 def main():
-	global editor
+	global editor, package_prefix
 	if not os.path.isfile('manage.py'):
-		print("Run this baby from a Django project's root directory")
+		print("Run this baby from a Django project's root directory.")
 		sys.exit()
 
 	user_input = input("What command should we use to edit files? [nano] ")
 	if user_input != '':
 		editor = user_input
+
+	if user_yesno("Prefix the new package name with \"django-\"?"):
+		package_prefix = 'django-'
+
+	package_dir = package_prefix + args.app_name
+	repo_dir = os.path.join(args.app_dir, args.app_name, package_dir)
+	app_dir = os.path.join(repo_dir, args.app_name)
+	project_dir = os.path.join(args.app_dir, args.app_name, "Project")
 
 	print("\n\n\n\nANNNNNNND AWAY!!\n\n\n\n")
 
@@ -86,7 +98,7 @@ def main():
 	print('\n**** DUNZO! :D ****\n')
 
 	if user_yesno("Display the README now?"):
-		readme_file = os.path.normpath(repo_dir + '/{}'.format('README.rst'))
+		readme_file = os.path.join(repo_dir, "README.md")
 		call("cat {}".format(readme_file))
 		print("\n\n")
 
@@ -98,9 +110,9 @@ def mkdirs(directories):
 
 
 def copy_template_file(filename, destination_subdirectory='', ask_to_edit=True):
-	global editor
-	template_file = os.path.normpath('{}/template_files/{}'.format(this_script_dir, filename))
-	destination_file = os.path.normpath('{}/{}/{}'.format(repo_dir, destination_subdirectory, filename))
+	global editor, package_prefix
+	template_file = os.path.join(this_script_dir, "template_files", filename)
+	destination_file = os.path.join(repo_dir, destination_subdirectory, filename)
 	print('Creating {}'.format(destination_file))
 	# Open the template version
 	with open(template_file, 'r') as file:
