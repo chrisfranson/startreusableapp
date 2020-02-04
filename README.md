@@ -18,9 +18,10 @@ Arguments
 -----------
 
  - `app_name`: A [valid](https://www.python.org/dev/peps/pep-0008/#package-and-module-names) package/module name
- - `app_dir`: The parent directory in which to put the new application directory structure. The result will look like this:
-
-
+ - `app_dir`: The parent directory in which to put the new application directory structure. The result will look like this:  
+  
+  
+```
     `app_dir`/
         `app_name`/
             Project/
@@ -42,4 +43,4 @@ Arguments
                 README.md
                 setup.py
                 .gitignore
-
+```
