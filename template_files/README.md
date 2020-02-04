@@ -1,4 +1,3 @@
-{app_header_line}
 {app_name}
 {app_header_line}
 
