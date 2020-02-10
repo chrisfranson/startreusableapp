@@ -102,6 +102,21 @@ def main():
 		mkdirs(dirs)
 		copy_template_file('urls.py', args.app_name)
 
+	if user_yesno("Add a scaffold IndexView, template, and entry in `urls.py`?"):
+		copy_template_file(
+			'views.py',
+			destination_subdirectory=args.app_name
+		)
+		copy_template_file(
+			'urls-with-view.py',
+			destination_subdirectory=args.app_name,
+			destination_filename='urls.py'
+		)
+		copy_template_file(
+			'index.html',
+			destination_subdirectory='{}/templates/{}'.format(args.app_name, args.app_name)
+		)
+
 	# Bring the user back to where we started
 	print_cyan('cd {}'.format(initial_cwd))
 	os.chdir(initial_cwd)
