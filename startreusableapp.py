@@ -7,6 +7,7 @@ description = 'This creates a reusable Django app'
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument('app_name')
 parser.add_argument('app_dir')
+parser.add_argument('--no-color', dest='no_color', default=False, action='store_true')
 args = parser.parse_args()
 
 # Important directories
@@ -20,14 +21,26 @@ project_dir = ''
 editor = 'nano'
 package_prefix = ''
 
+# Fancy text
+fancy_text = {
+	'purple': '\033[95m',
+	'cyan': '\033[96m',
+	'yellow': '\033[93m',
+	'red': '\033[91m',
+	'b': '\033[1m',
+	'end': '\033[0m',
+}
+if args.no_color:
+	fancy_text = { key:'' for (key, value) in fancy_text.items() }
+
 
 def main():
 	global editor, package_prefix
 	if not os.path.isfile('manage.py'):
-		print("Run this baby from a Django project's root directory.")
+		print("{red}Run this baby from a Django project's root directory.{end}")
 		sys.exit()
 
-	user_input = input("What command should we use to edit files? [nano] ")
+	user_input = input("{purple}What command should we use to edit files?{end} [nano] ".format(**fancy_text))
 	if user_input != '':
 		editor = user_input
 
@@ -39,26 +52,26 @@ def main():
 	app_dir = os.path.join(repo_dir, args.app_name)
 	project_dir = os.path.join(args.app_dir, args.app_name, "Project")
 
-	print("\n\n\n\nANNNNNNND AWAY!!\n\n\n\n")
+	print("\n\n\n\n{b}{yellow}ANNNNNNND AWAY!!{end}\n\n\n\n".format(**fancy_text))
 
 	startapp_command = 'python manage.py startapp {} {}'.format(args.app_name, app_dir)
 	if not os.path.isdir(app_dir):
 		try:
-			print("mkdir -p {}".format(repo_dir))
+			print_cyan("mkdir -p {}".format(repo_dir))
 			mkdir_p(app_dir)
 		except OSError:
-			print("Couldn't create directory: {}".format(repo_dir))
+			print("{red}Couldn't create directory: {repo_dir}{end}".format(repo_dir=repo_dir, **fancy_text))
 			sys.exit()
 		try:
-			print("mkdir {}".format(project_dir))
+			print_cyan("mkdir {}".format(project_dir))
 			os.mkdir(project_dir)
 		except OSError:
-			print("Couldn't create directory: {}".format(project_dir))
+			print("{red}Couldn't create directory: {project_dir}{end}".format(project_dir, **fancy_text))
 			sys.exit()
 
 	call(startapp_command)
 
-	print('cd {}'.format(repo_dir))
+	print_cyan('cd {}'.format(repo_dir))
 	os.chdir(repo_dir)
 
 	copy_template_file('.gitignore', '', False)
@@ -89,13 +102,13 @@ def main():
 		copy_template_file('urls.py', args.app_name)
 
 	# Bring the user back to where we started
-	print('cd {}'.format(initial_cwd))
+	print_cyan('cd {}'.format(initial_cwd))
 	os.chdir(initial_cwd)
 
 	if user_yesno("Install {} with pip now?".format(args.app_name)):
 		call('pip install -e {}'.format(repo_dir))
 
-	print('\n**** DUNZO! :D ****\n')
+	print('\n{yellow}{b}**** DUNZO! :D ****{end}\n'.format(**fancy_text))
 
 	if user_yesno("Display the README now?"):
 		readme_file = os.path.join(repo_dir, "README.md")
@@ -105,7 +118,7 @@ def main():
 
 def mkdirs(directories):
 	for directory in directories:
-		print('mkdir -p {}'.format(directory))
+		print_cyan('mkdir -p {}'.format(directory))
 		mkdir_p(directory)
 
 
@@ -113,7 +126,7 @@ def copy_template_file(filename, destination_subdirectory='', ask_to_edit=True):
 	global editor, package_prefix
 	template_file = os.path.join(this_script_dir, "template_files", filename)
 	destination_file = os.path.join(repo_dir, destination_subdirectory, filename)
-	print('Creating {}'.format(destination_file))
+	print_cyan('Creating {}'.format(destination_file))
 	# Open the template version
 	with open(template_file, 'r') as file:
 		filedata = file.read()
@@ -131,14 +144,18 @@ def copy_template_file(filename, destination_subdirectory='', ask_to_edit=True):
 
 
 def user_yesno(question):
-	user_input = input(question + ' [y]/n ')
+	user_input = input("\n{purple}{question}{end} [y]/n ".format(question=question, **fancy_text))
 	return user_input.lower() == 'y' or user_input.lower() == 'yes' or user_input == ''
 
 
 def call(command, print_it=True):
 	if print_it:
-		print(command)
+		print("\n{cyan}{command}{end}".format(command=command, **fancy_text))
 	os.system(command)
+
+
+def print_cyan(s):
+	print("\n{cyan}{s}{end}".format(s=s, **fancy_text))
 
 
 def mkdir_p(path):
