@@ -1,23 +1,23 @@
-{app_name}
-{app_header_line}
+$app_name
+$app_header_line
 
-{app_name} description
+$app_name description
 
 Quick start
 -----------
 
 1. `pip install` the app
-    - Local: `pip install -e /path/to/{app_name}/repo`
+    - Local: `pip install -e /path/to/$package_prefix$app_name/repo`
 
-2. Add "{app_name}" to your INSTALLED_APPS setting like this::
+2. Add "$app_name" to your INSTALLED_APPS setting like this::
 
     INSTALLED_APPS = [
         ...
-        '{app_name}',
+        '$app_name',
     ]
 
-3. Include the {app_name} URLconf in your project urls.py like this::
+3. Include the $app_name URLconf in your project urls.py like this::
 
-    path('{app_name}/', include('{app_name}.urls')),
+    path('$app_name/', include('$app_name.urls')),
 
-4. Run `python manage.py migrate` to create the {app_name} models.
+4. Run `python manage.py migrate` to create the $app_name models.

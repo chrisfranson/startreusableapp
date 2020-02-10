@@ -8,12 +8,12 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name='{package_prefix}{app_name}',
+    name='$package_prefix$app_name',
     version='0.1',
     packages=find_packages(),
     include_package_data=True,
     license='BSD License',  # example license
-    description='{app_name} description.',
+    description='$app_name description.',
     long_description=README,
     url='',
     author='Name',

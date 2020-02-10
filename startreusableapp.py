@@ -1,5 +1,6 @@
 import sys, os 
 import errno, argparse, subprocess, fileinput
+from string import Template
 
 description = 'This creates a reusable Django app'
 
@@ -130,8 +131,9 @@ def copy_template_file(filename, destination_subdirectory='', ask_to_edit=True):
 	# Open the template version
 	with open(template_file, 'r') as file:
 		filedata = file.read()
-	# Replace the {app_name} and {app_header_line} variables
-	filedata = filedata.format(
+	# Replace the template variables
+	filedata = Template(filedata)
+	filedata = filedata.substitute(
 		app_name=args.app_name,
 		package_prefix=package_prefix,
 		app_header_line='='*len(args.app_name)
