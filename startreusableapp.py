@@ -75,7 +75,7 @@ def main():
 	print_cyan('cd {}'.format(repo_dir))
 	os.chdir(repo_dir)
 
-	copy_template_file('.gitignore', '', False)
+	copy_template_file('.gitignore')
 	call('git init && git add .')
 	call("git commit -m 'Initial commit!\n\nCreate an app scaffold with \"python manage.py startapp\"'")
 	call('git checkout -b dev')
@@ -123,10 +123,12 @@ def mkdirs(directories):
 		mkdir_p(directory)
 
 
-def copy_template_file(filename, destination_subdirectory='', ask_to_edit=True):
+def copy_template_file(filename, destination_subdirectory='', destination_filename=False, ask_to_edit=False):
 	global editor, package_prefix
 	template_file = os.path.join(this_script_dir, "template_files", filename)
-	destination_file = os.path.join(repo_dir, destination_subdirectory, filename)
+	if not destination_filename:
+		destination_filename = filename
+	destination_file = os.path.join(repo_dir, destination_subdirectory, destination_filename)
 	print_cyan('Creating {}'.format(destination_file))
 	# Open the template version
 	with open(template_file, 'r') as file:
