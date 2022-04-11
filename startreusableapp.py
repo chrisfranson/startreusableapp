@@ -8,6 +8,7 @@ description = 'This creates a reusable Django app'
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument('app_name')
 parser.add_argument('parent_dir')
+parser.add_argument('--no-input', dest='no_input', default=False, action='store_true')
 parser.add_argument('--no-color', dest='no_color', default=False, action='store_true')
 args = parser.parse_args()
 
@@ -43,9 +44,10 @@ def main():
 		print("{red}Run this baby from a Django project's root directory.{end}")
 		sys.exit()
 
-	user_input = input("{purple}What command should we use to edit files?{end} [nano] ".format(**fancy_text))
-	if user_input != '':
-		editor = user_input
+	if not args.no_input:
+		user_input = input("{purple}What command should we use to edit files?{end} [nano] ".format(**fancy_text))
+		if user_input != '':
+			editor = user_input
 
 	if user_yesno("Prefix the new package name with \"django-\"?"):
 		package_prefix = 'django-'
@@ -214,6 +216,8 @@ def copy_template_file(filename, destination_subdirectory='', substitutions=None
 
 
 def user_yesno(question):
+	if args.no_input:
+		return True
 	user_input = input("\n{purple}{question}{end} [y]/n ".format(question=question, **fancy_text))
 	return user_input.lower() == 'y' or user_input.lower() == 'yes' or user_input == ''
 
