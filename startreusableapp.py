@@ -17,6 +17,8 @@ initial_cwd = os.getcwd()
 repo_dir = ''
 parent_dir = ''
 project_dir = ''
+templates_dir = ''
+static_dir = ''
 
 # More user config
 editor = 'nano'
@@ -100,7 +102,7 @@ def main():
 		mkdirs([templates_dir, static_dir])
 		copy_template_file('urls.py', args.app_name)
 
-	if user_yesno("Add a scaffold IndexView, template, and entry in `urls.py`?"):
+	if templates_dir and user_yesno("Add a scaffold IndexView, template, and entry in `urls.py`?"):
 		copy_template_file(
 			'views.py',
 			destination_subdirectory=args.app_name
@@ -110,10 +112,55 @@ def main():
 			destination_subdirectory=args.app_name,
 			destination_filename='urls.py'
 		)
-		copy_template_file(
-			'index.html',
-			destination_subdirectory='{}/templates/{}'.format(args.app_name, args.app_name)
-		)
+		if templates_dir and static_dir and user_yesno(f"""How 'bout all this?
+
+ - Get the latest Bootstrap (bundle)
+ - require django-compressor
+ - require django-bootstrap5
+ - add templates/{args.app_name}/base.html
+ - add static/css/{args.app_name}.css
+ - add static/js/{args.app_name}.js
+
+ """):
+			css_dir = os.path.join(static_dir, 'css')
+			js_dir = os.path.join(static_dir, 'js')
+			call(f"wget https://raw.githubusercontent.com/twbs/bootstrap/main/dist/css/bootstrap.css -P {css_dir}")
+			call(f"wget https://raw.githubusercontent.com/twbs/bootstrap/main/dist/js/bootstrap.bundle.js -P {js_dir}")
+			install_requires = ['django-compressor', 'django-bootstrap5']
+			install_requires_string = ''
+			for package in install_requires:
+				install_requires_string += f"        '{package}',\n"
+			install_requires_string = install_requires_string.rstrip()
+			copy_template_file(
+				'index-bootstrap.html',
+				destination_subdirectory=templates_dir,
+				destination_filename='index.html',
+			)
+			copy_template_file(
+				'base.html',
+				destination_subdirectory=templates_dir,
+			)
+			copy_template_file(
+				'setup-with-requirements.py',
+				substitutions={'install_requires': install_requires_string},
+				destination_filename='setup.py',
+			)
+			copy_template_file(
+				'app_name.css',
+				destination_subdirectory=css_dir,
+				destination_filename=f'{args.app_name}.css'
+			)
+			copy_template_file(
+				'app_name.js',
+				destination_subdirectory=js_dir,
+				destination_filename=f'{args.app_name}.js'
+			)
+		else:
+			copy_template_file(
+				'index-barebones.html',
+				destination_subdirectory=templates_dir,
+				destination_filename='index.html'
+			)
 
 	# Bring the user back to where we started
 	print_cyan(f'cd {initial_cwd}')
@@ -121,6 +168,9 @@ def main():
 
 	if user_yesno(f"Install {args.app_name} with pip now?"):
 		call(f'pip install -e {repo_dir}')
+	else:
+		print("You can install it later with:")
+		print(f'pip install -e {repo_dir}')
 
 	print('\n{yellow}{b}**** DUNZO! :D ****{end}\n'.format(**fancy_text))
 

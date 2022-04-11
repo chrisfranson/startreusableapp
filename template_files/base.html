@@ -1,0 +1,29 @@
+{% load static compress %}
+<!doctype html>
+<html>
+    <head>
+        <title>{% block page_title %}$app_name{% endblock %}</title>
+        {% compress css %}
+            <link rel="stylesheet" type="text/css" href="{% static '$app_name/css/bootstrap.css' %}" />
+            <link rel="stylesheet" type="text/css" href="{% static '$app_name/css/$app_name.css' %}" />
+            {% block media %}{% endblock %}
+            {% block extra_css %}{% endblock %}
+            <style>
+                {% block inline_css %}{% endblock %}
+            </style>
+        {% endcompress %}
+    </head>
+    <body>
+        {% block content %}{% endblock %}
+        {% compress js %}
+            <script src="{% static '$app_name/js/bootstrap.bundle.js' %}"></script>
+            <script src="{% static '$app_name/js/$app_name.js' %}"></script>
+            {% block extra_js %}{% endblock %}
+            <script>
+                {% autoescape off %}
+                {% block inline_js %}{% endblock %}
+                {% endautoescape %}
+            </script>
+        {% endcompress %}
+    </body>
+</html>
