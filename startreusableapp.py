@@ -7,7 +7,7 @@ description = 'This creates a reusable Django app'
 # Parse script arguments
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument('app_name')
-parser.add_argument('app_dir')
+parser.add_argument('parent_dir')
 parser.add_argument('--no-color', dest='no_color', default=False, action='store_true')
 args = parser.parse_args()
 
@@ -15,7 +15,7 @@ args = parser.parse_args()
 this_script_dir = os.path.dirname(os.path.realpath(__file__))
 initial_cwd = os.getcwd()
 repo_dir = ''
-app_dir = ''
+parent_dir = ''
 project_dir = ''
 
 # More user config
@@ -49,17 +49,17 @@ def main():
 		package_prefix = 'django-'
 
 	package_dir = package_prefix + args.app_name
-	repo_dir = os.path.join(args.app_dir, args.app_name, package_dir)
-	app_dir = os.path.join(repo_dir, args.app_name)
-	project_dir = os.path.join(args.app_dir, args.app_name, "Project")
+	repo_dir = os.path.join(args.parent_dir, args.app_name, package_dir)
+	parent_dir = os.path.join(repo_dir, args.app_name)
+	project_dir = os.path.join(args.parent_dir, args.app_name, "Project")
 
 	print("\n\n\n\n{b}{yellow}ANNNNNNND AWAY!!{end}\n\n\n\n".format(**fancy_text))
 
-	startapp_command = 'python manage.py startapp {} {}'.format(args.app_name, app_dir)
-	if not os.path.isdir(app_dir):
+	startapp_command = f'python manage.py startapp {args.app_name} {parent_dir}'
+	if not os.path.isdir(parent_dir):
 		try:
 			print_cyan("mkdir -p {}".format(repo_dir))
-			mkdir_p(app_dir)
+			mkdir_p(parent_dir)
 		except OSError:
 			print("{red}Couldn't create directory: {repo_dir}{end}".format(repo_dir=repo_dir, **fancy_text))
 			sys.exit()
