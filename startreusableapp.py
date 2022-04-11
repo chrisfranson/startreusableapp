@@ -58,7 +58,7 @@ def main():
 	startapp_command = f'python manage.py startapp {args.app_name} {parent_dir}'
 	if not os.path.isdir(parent_dir):
 		try:
-			print_cyan("mkdir -p {}".format(repo_dir))
+			print_cyan(f"mkdir -p {repo_dir}")
 			mkdir_p(parent_dir)
 		except OSError:
 			print("{red}Couldn't create directory: {repo_dir}{end}".format(repo_dir=repo_dir, **fancy_text))
@@ -67,12 +67,12 @@ def main():
 			print_cyan("mkdir {}".format(project_dir))
 			os.mkdir(project_dir)
 		except OSError:
-			print("{red}Couldn't create directory: {project_dir}{end}".format(project_dir, **fancy_text))
+			print("{red}Couldn't create directory: {project_dir}{end}".format(project_dir=project_dir, **fancy_text))
 			sys.exit()
 
 	call(startapp_command)
 
-	print_cyan('cd {}'.format(repo_dir))
+	print_cyan(f'cd {repo_dir}')
 	os.chdir(repo_dir)
 
 	copy_template_file('.gitignore')
@@ -95,11 +95,9 @@ def main():
 		call("git add . && git commit -m 'Package the app for reusability'")
 
 	if user_yesno("Add templates/, static/, and urls.py?"):
-		dirs = [
-			'{0}/templates/{0}'.format(args.app_name),
-			'{0}/static/{0}'.format(args.app_name),
-		]
-		mkdirs(dirs)
+		templates_dir = os.path.join(args.app_name, 'templates', args.app_name)
+		static_dir = os.path.join(args.app_name, 'static', args.app_name)
+		mkdirs([templates_dir, static_dir])
 		copy_template_file('urls.py', args.app_name)
 
 	if user_yesno("Add a scaffold IndexView, template, and entry in `urls.py`?"):
@@ -118,23 +116,23 @@ def main():
 		)
 
 	# Bring the user back to where we started
-	print_cyan('cd {}'.format(initial_cwd))
+	print_cyan(f'cd {initial_cwd}')
 	os.chdir(initial_cwd)
 
-	if user_yesno("Install {} with pip now?".format(args.app_name)):
-		call('pip install -e {}'.format(repo_dir))
+	if user_yesno(f"Install {args.app_name} with pip now?"):
+		call(f'pip install -e {repo_dir}')
 
 	print('\n{yellow}{b}**** DUNZO! :D ****{end}\n'.format(**fancy_text))
 
 	if user_yesno("Display the README now?"):
 		readme_file = os.path.join(repo_dir, "README.md")
-		call("cat {}".format(readme_file))
+		call(f"cat {readme_file}")
 		print("\n\n")
 
 
 def mkdirs(directories):
 	for directory in directories:
-		print_cyan('mkdir -p {}'.format(directory))
+		print_cyan(f'mkdir -p {directory}')
 		mkdir_p(directory)
 
 
@@ -144,7 +142,7 @@ def copy_template_file(filename, destination_subdirectory='', destination_filena
 	if not destination_filename:
 		destination_filename = filename
 	destination_file = os.path.join(repo_dir, destination_subdirectory, destination_filename)
-	print_cyan('Creating {}'.format(destination_file))
+	print_cyan(f'Creating {destination_filename}')
 	# Open the template version
 	with open(template_file, 'r') as file:
 		filedata = file.read()
@@ -158,8 +156,8 @@ def copy_template_file(filename, destination_subdirectory='', destination_filena
 	# Write the modified version to the new app's dir
 	with open(destination_file, 'w') as file:
 		file.write(filedata)
-	if ask_to_edit and user_yesno("Edit {} with {} now?".format(filename, editor)):
-		call('{} {}'.format(editor, destination_file))
+	if ask_to_edit and user_yesno(f"Edit {filename} with {editor} now?"):
+		call(f'{editor} {destination_file}')
 
 
 def user_yesno(question):
