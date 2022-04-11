@@ -136,7 +136,7 @@ def mkdirs(directories):
 		mkdir_p(directory)
 
 
-def copy_template_file(filename, destination_subdirectory='', destination_filename=False, ask_to_edit=False):
+def copy_template_file(filename, destination_subdirectory='', substitutions=None, destination_filename=False, ask_to_edit=False):
 	global editor, package_prefix
 	template_file = os.path.join(this_script_dir, "template_files", filename)
 	if not destination_filename:
@@ -148,11 +148,14 @@ def copy_template_file(filename, destination_subdirectory='', destination_filena
 		filedata = file.read()
 	# Replace the template variables
 	filedata = Template(filedata)
-	filedata = filedata.substitute(
-		app_name=args.app_name,
-		package_prefix=package_prefix,
-		app_header_line='='*len(args.app_name)
-	)
+	_substitutions = {
+		'app_name': args.app_name,
+		'package_prefix': package_prefix,
+		'app_header_line': '='*len(args.app_name),
+	}
+	if substitutions:
+		_substitutions |= substitutions
+	filedata = filedata.substitute(**_substitutions)
 	# Write the modified version to the new app's dir
 	with open(destination_file, 'w') as file:
 		file.write(filedata)
