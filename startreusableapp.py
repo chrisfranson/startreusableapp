@@ -49,21 +49,22 @@ def main():
 		if user_input != '':
 			editor = user_input
 
-	if user_yesno("Prefix the new package name with \"django-\"?"):
+	if user_yesno("Prefix the new package name with \"django-\"?", default='n'):
 		package_prefix = 'django-'
 
-	package_dir = package_prefix + args.app_name
-	repo_dir = os.path.join(args.parent_dir, args.app_name, package_dir)
-	parent_dir = os.path.join(repo_dir, args.app_name)
+	module_name = args.app_name.replace('-', '_')
+	package_dirname = package_prefix + args.app_name
+	repo_dir = os.path.join(args.parent_dir, args.app_name, package_dirname)
+	app_root_dir = os.path.join(repo_dir, module_name)
 	project_dir = os.path.join(args.parent_dir, args.app_name, "Project")
 
 	print("\n\n\n\n{b}{yellow}ANNNNNNND AWAY!!{end}\n\n\n\n".format(**fancy_text))
 
-	startapp_command = f'python manage.py startapp {args.app_name} {parent_dir}'
-	if not os.path.isdir(parent_dir):
+	startapp_command = f'python manage.py startapp {module_name} {app_root_dir}'
+	if not os.path.isdir(app_root_dir):
 		try:
 			print_cyan(f"mkdir -p {repo_dir}")
-			mkdir_p(parent_dir)
+			mkdir_p(app_root_dir)
 		except OSError:
 			print("{red}Couldn't create directory: {repo_dir}{end}".format(repo_dir=repo_dir, **fancy_text))
 			sys.exit()
@@ -73,6 +74,9 @@ def main():
 		except OSError:
 			print("{red}Couldn't create directory: {project_dir}{end}".format(project_dir=project_dir, **fancy_text))
 			sys.exit()
+
+	# print(f"\n\n{startapp_command}\n\n")
+	# exit()
 
 	call(startapp_command)
 
@@ -99,19 +103,19 @@ def main():
 		call("git add . && git commit -m 'Package the app for reusability'")
 
 	if user_yesno("Add templates/, static/, and urls.py?"):
-		templates_dir = os.path.join(args.app_name, 'templates', args.app_name)
-		static_dir = os.path.join(args.app_name, 'static', args.app_name)
+		templates_dir = os.path.join(module_name, 'templates', module_name)
+		static_dir = os.path.join(module_name, 'static', module_name)
 		mkdirs([templates_dir, static_dir])
-		copy_template_file('urls.py', args.app_name)
+		copy_template_file('urls.py', module_name)
 
 	if templates_dir and user_yesno("Add a scaffold IndexView, template, and entry in `urls.py`?"):
 		copy_template_file(
 			'views.py',
-			destination_subdirectory=args.app_name
+			destination_subdirectory=module_name
 		)
 		copy_template_file(
 			'urls-with-view.py',
-			destination_subdirectory=args.app_name,
+			destination_subdirectory=module_name,
 			destination_filename='urls.py'
 		)
 		if templates_dir and static_dir and user_yesno(f"""How 'bout all this?
@@ -119,9 +123,9 @@ def main():
  - Get the latest Bootstrap (bundle)
  - require django-compressor
  - require django-bootstrap5
- - add templates/{args.app_name}/base.html
- - add static/css/{args.app_name}.css
- - add static/js/{args.app_name}.js
+ - add templates/{module_name}/base.html
+ - add static/css/{module_name}.css
+ - add static/js/{module_name}.js
 
  """):
 			css_dir = os.path.join(static_dir, 'css')
@@ -150,12 +154,12 @@ def main():
 			copy_template_file(
 				'app_name.css',
 				destination_subdirectory=css_dir,
-				destination_filename=f'{args.app_name}.css'
+				destination_filename=f'{module_name}.css'
 			)
 			copy_template_file(
 				'app_name.js',
 				destination_subdirectory=js_dir,
-				destination_filename=f'{args.app_name}.js'
+				destination_filename=f'{module_name}.js'
 			)
 		else:
 			copy_template_file(
@@ -168,7 +172,7 @@ def main():
 	print_cyan(f'cd {initial_cwd}')
 	os.chdir(initial_cwd)
 
-	if user_yesno(f"Install {args.app_name} with pip now?"):
+	if user_yesno(f"Install {module_name} with pip now?"):
 		call(f'pip install -e {repo_dir}')
 	else:
 		print("You can install it later with:")
@@ -215,10 +219,11 @@ def copy_template_file(filename, destination_subdirectory='', substitutions=None
 		call(f'{editor} {destination_file}')
 
 
-def user_yesno(question):
+def user_yesno(question, default='y'):
 	if args.no_input:
-		return True
-	user_input = input("\n{purple}{question}{end} [y]/n ".format(question=question, **fancy_text))
+		user_input = default
+	else:
+		user_input = input("\n{purple}{question}{end} [y]/n ".format(question=question, **fancy_text))
 	return user_input.lower() == 'y' or user_input.lower() == 'yes' or user_input == ''
 
 
