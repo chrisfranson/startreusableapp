@@ -33,6 +33,10 @@ parser.add_argument('--with-oauth', dest='with_oauth', default=None, action='sto
                     help='Include OAuth2 authentication setup (requires --with-drf)')
 parser.add_argument('--no-oauth', dest='with_oauth', action='store_false',
                     help='Skip OAuth setup')
+parser.add_argument('--with-tests', dest='with_tests', default=None, action='store_true',
+                    help='Include pytest testing scaffold with sample tests')
+parser.add_argument('--no-tests', dest='with_tests', action='store_false',
+                    help='Skip testing scaffold')
 parser.add_argument('--with-views', dest='with_views', default=None, action='store_true',
                     help='Add templates, static, and IndexView scaffold')
 parser.add_argument('--no-views', dest='with_views', action='store_false',
@@ -230,6 +234,29 @@ def main():
             copy_template_file('urls-with-drf.py', destination_subdirectory=module_name, destination_filename='urls.py')
             update_setup_py_for_drf()
 
+    # Optionally add testing scaffold
+    add_tests = args.with_tests if args.with_tests is not None else user_yesno("Would you like to include pytest testing scaffold?")
+
+    if add_tests:
+        tests_dir = os.path.join(repo_dir, 'tests')
+        mkdirs([tests_dir])
+
+        # Copy test configuration and fixtures
+        copy_template_file('pytest.ini')
+        copy_template_file('conftest.py', destination_subdirectory='tests')
+        copy_template_file('test_settings.py', destination_subdirectory='tests', destination_filename='settings.py')
+
+        # Copy test files (only if OAuth/DRF models exist)
+        if add_drf and add_oauth:
+            copy_template_file('test_models.py', destination_subdirectory='tests')
+            copy_template_file('test_api.py', destination_subdirectory='tests')
+
+        # Create __init__.py for tests package
+        with open(os.path.join(tests_dir, '__init__.py'), 'w') as f:
+            f.write('')
+
+        update_setup_py_for_tests()
+
     # Bring the user back to where we started
     print_cyan(f'cd {initial_cwd}')
     os.chdir(initial_cwd)
@@ -315,6 +342,29 @@ def update_setup_py_for_oauth():
         content = content.replace("install_requires=[", f"install_requires=[\n{install_requires_str}")
     else:
         content = content.replace("setup(", f"setup(\n    install_requires=[\n{install_requires_str}\n    ],")
+
+    with open(setup_file, 'w') as file:
+        file.write(content)
+
+
+def update_setup_py_for_tests():
+    """Update setup.py to include test dependencies."""
+    setup_file = os.path.join(repo_dir, 'setup.py')
+    with open(setup_file, 'r') as file:
+        content = file.read()
+
+    # Add extras_require for tests if not present
+    tests_require_str = """    extras_require={
+        'test': [
+            'pytest>=7.0',
+            'pytest-django>=4.5',
+            'pytest-cov>=4.0',
+        ],
+    },"""
+
+    if "extras_require" not in content:
+        # Find the closing parenthesis of setup()
+        content = content.replace("\n)", f"\n{tests_require_str}\n)")
 
     with open(setup_file, 'w') as file:
         file.write(content)
