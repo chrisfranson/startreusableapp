@@ -18,29 +18,28 @@ Arguments
 -----------
 
  - `app_name`: A [valid](https://www.python.org/dev/peps/pep-0008/#package-and-module-names) package/module name
- - `app_dir`: The parent directory in which to put the new application directory structure. The result will look like this:  
-  
-  
+ - `app_dir`: The parent directory in which to put the new application directory structure. The result will look like this:
+
+
 ```
     `app_dir`/
-        `app_name`/
+        django-`app_name`/   (or just `app_name` if no prefix)
             Project/
             `app_name`/
-                docs/
-                `app_name`/
-                    migrations/
-                    static/
-                    templates/
-                    admin.py
-                    apps.py
-                    __init__.py
-                    models.py
-                    tests.py
-                    urls.py
-                    views.py
-                .git/
-                MANIFEST.in
-                README.md
-                setup.py
-                .gitignore
+                migrations/
+                static/
+                templates/
+                admin.py
+                apps.py
+                __init__.py
+                models.py
+                tests.py
+                urls.py
+                views.py
+            docs/
+            .git/
+            MANIFEST.in
+            README.md
+            setup.py
+            .gitignore
 ```

@@ -59,9 +59,9 @@ def main():
 
     module_name = args.app_name.replace('-', '_')
     package_dirname = package_prefix + args.app_name
-    repo_dir = os.path.join(args.parent_dir, args.app_name, package_dirname)
+    repo_dir = os.path.join(args.parent_dir, package_dirname)
     app_root_dir = os.path.join(repo_dir, module_name)
-    project_dir = os.path.join(args.parent_dir, args.app_name, "Project")
+    project_dir = os.path.join(repo_dir, "Project")
 
     print("\n\n\n\n{b}{yellow}ANNNNNNND AWAY!!{end}\n\n\n\n".format(**fancy_text))
 
