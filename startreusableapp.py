@@ -45,6 +45,10 @@ parser.add_argument('--with-precommit', dest='with_precommit', default=None, act
                     help='Include pre-commit hooks and pyproject.toml')
 parser.add_argument('--no-precommit', dest='with_precommit', action='store_false',
                     help='Skip pre-commit configuration')
+parser.add_argument('--with-ci', dest='with_ci', default=None, action='store_true',
+                    help='Include GitHub Actions CI/CD workflow')
+parser.add_argument('--no-ci', dest='with_ci', action='store_false',
+                    help='Skip CI/CD configuration')
 parser.add_argument('--with-views', dest='with_views', default=None, action='store_true',
                     help='Add templates, static, and IndexView scaffold')
 parser.add_argument('--no-views', dest='with_views', action='store_false',
@@ -248,6 +252,14 @@ def main():
     if add_precommit:
         copy_template_file('.pre-commit-config.yaml')
         copy_template_file('pyproject.toml')
+
+    # Optionally add GitHub Actions CI/CD
+    add_ci = args.with_ci if args.with_ci is not None else user_yesno("Would you like to include GitHub Actions CI/CD workflow?")
+
+    if add_ci:
+        github_workflows_dir = os.path.join(repo_dir, '.github', 'workflows')
+        mkdirs([github_workflows_dir])
+        copy_template_file('ci.yml', destination_subdirectory='.github/workflows')
 
     # Optionally add management commands scaffold
     add_mgmt_commands = args.with_mgmt_commands if args.with_mgmt_commands is not None else user_yesno("Would you like to include management commands scaffold?")
