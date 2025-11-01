@@ -37,6 +37,10 @@ parser.add_argument('--with-tests', dest='with_tests', default=None, action='sto
                     help='Include pytest testing scaffold with sample tests')
 parser.add_argument('--no-tests', dest='with_tests', action='store_false',
                     help='Skip testing scaffold')
+parser.add_argument('--with-management-commands', dest='with_mgmt_commands', default=None, action='store_true',
+                    help='Include management commands scaffold')
+parser.add_argument('--no-management-commands', dest='with_mgmt_commands', action='store_false',
+                    help='Skip management commands scaffold')
 parser.add_argument('--with-views', dest='with_views', default=None, action='store_true',
                     help='Add templates, static, and IndexView scaffold')
 parser.add_argument('--no-views', dest='with_views', action='store_false',
@@ -233,6 +237,22 @@ def main():
             copy_template_file('api_views.py', destination_subdirectory=module_name)
             copy_template_file('urls-with-drf.py', destination_subdirectory=module_name, destination_filename='urls.py')
             update_setup_py_for_drf()
+
+    # Optionally add management commands scaffold
+    add_mgmt_commands = args.with_mgmt_commands if args.with_mgmt_commands is not None else user_yesno("Would you like to include management commands scaffold?")
+
+    if add_mgmt_commands:
+        mgmt_commands_dir = os.path.join(module_name, 'management', 'commands')
+        mkdirs([mgmt_commands_dir])
+
+        # Create __init__.py files
+        with open(os.path.join(module_name, 'management', '__init__.py'), 'w') as f:
+            f.write('')
+        with open(os.path.join(mgmt_commands_dir, '__init__.py'), 'w') as f:
+            f.write('')
+
+        # Copy example command
+        copy_template_file('example_command.py', destination_subdirectory=mgmt_commands_dir)
 
     # Optionally add testing scaffold
     add_tests = args.with_tests if args.with_tests is not None else user_yesno("Would you like to include pytest testing scaffold?")
