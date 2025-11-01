@@ -29,6 +29,10 @@ parser.add_argument('--with-drf', dest='with_drf', default=None, action='store_t
                     help='Include Django REST Framework scaffold')
 parser.add_argument('--no-drf', dest='with_drf', action='store_false',
                     help='Skip DRF setup')
+parser.add_argument('--with-oauth', dest='with_oauth', default=None, action='store_true',
+                    help='Include OAuth2 authentication setup (requires --with-drf)')
+parser.add_argument('--no-oauth', dest='with_oauth', action='store_false',
+                    help='Skip OAuth setup')
 parser.add_argument('--with-views', dest='with_views', default=None, action='store_true',
                     help='Add templates, static, and IndexView scaffold')
 parser.add_argument('--no-views', dest='with_views', action='store_false',
@@ -209,14 +213,22 @@ def main():
     add_drf = args.with_drf if args.with_drf is not None else user_yesno("Would you like to include Django REST Framework (DRF) support?")
 
     if add_drf:
-        copy_template_file('serializers.py', destination_subdirectory=module_name)
-        copy_template_file('api_views.py', destination_subdirectory=module_name)
-        copy_template_file(
-            'urls-with-drf.py',
-            destination_subdirectory=module_name,
-            destination_filename='urls.py'
-        )
-        update_setup_py_for_drf()
+        # Check if we should add OAuth support
+        add_oauth = args.with_oauth if args.with_oauth is not None else user_yesno("Include OAuth2 authentication setup with user-scoped models?")
+
+        if add_oauth:
+            # OAuth-ready templates (includes models, serializers, views with user scoping)
+            copy_template_file('models_oauth.py', destination_subdirectory=module_name, destination_filename='models.py')
+            copy_template_file('serializers_oauth.py', destination_subdirectory=module_name, destination_filename='serializers.py')
+            copy_template_file('api_views_oauth.py', destination_subdirectory=module_name, destination_filename='api_views.py')
+            copy_template_file('urls-with-oauth.py', destination_subdirectory=module_name, destination_filename='urls.py')
+            update_setup_py_for_oauth()
+        else:
+            # Standard DRF templates
+            copy_template_file('serializers.py', destination_subdirectory=module_name)
+            copy_template_file('api_views.py', destination_subdirectory=module_name)
+            copy_template_file('urls-with-drf.py', destination_subdirectory=module_name, destination_filename='urls.py')
+            update_setup_py_for_drf()
 
     # Bring the user back to where we started
     print_cyan(f'cd {initial_cwd}')
@@ -281,6 +293,23 @@ def update_setup_py_for_drf():
         content = file.read()
 
     install_requires_str = "        'djangorestframework',\n        'drf-spectacular',"
+
+    if "install_requires" in content:
+        content = content.replace("install_requires=[", f"install_requires=[\n{install_requires_str}")
+    else:
+        content = content.replace("setup(", f"setup(\n    install_requires=[\n{install_requires_str}\n    ],")
+
+    with open(setup_file, 'w') as file:
+        file.write(content)
+
+
+def update_setup_py_for_oauth():
+    """Update setup.py to include DRF, drf-spectacular, and django-oauth-toolkit."""
+    setup_file = os.path.join(repo_dir, 'setup.py')
+    with open(setup_file, 'r') as file:
+        content = file.read()
+
+    install_requires_str = "        'djangorestframework',\n        'drf-spectacular',\n        'django-oauth-toolkit',"
 
     if "install_requires" in content:
         content = content.replace("install_requires=[", f"install_requires=[\n{install_requires_str}")
