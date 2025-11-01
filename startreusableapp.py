@@ -11,10 +11,32 @@ description = 'This creates a reusable Django app'
 
 # Parse script arguments
 parser = argparse.ArgumentParser(description=description)
-parser.add_argument('app_name')
-parser.add_argument('parent_dir')
-parser.add_argument('--no-input', dest='no_input', default=False, action='store_true')
-parser.add_argument('--no-color', dest='no_color', default=False, action='store_true')
+parser.add_argument('app_name', help='Name of the Django app to create')
+parser.add_argument('parent_dir', help='Parent directory where the app will be created')
+parser.add_argument('--no-input', dest='no_input', default=False, action='store_true',
+                    help='Run without interactive prompts (use with other flags to specify options)')
+parser.add_argument('--no-color', dest='no_color', default=False, action='store_true',
+                    help='Disable colored output')
+parser.add_argument('--prefix', dest='add_prefix', default=False, action='store_true',
+                    help='Prefix package name with "django-"')
+parser.add_argument('--editor', dest='editor', default='nano',
+                    help='Editor to use for file editing (default: nano)')
+parser.add_argument('--with-bootstrap', dest='with_bootstrap', default=None, action='store_true',
+                    help='Include Bootstrap, django-compressor, and django-bootstrap5')
+parser.add_argument('--no-bootstrap', dest='with_bootstrap', action='store_false',
+                    help='Skip Bootstrap setup')
+parser.add_argument('--with-drf', dest='with_drf', default=None, action='store_true',
+                    help='Include Django REST Framework scaffold')
+parser.add_argument('--no-drf', dest='with_drf', action='store_false',
+                    help='Skip DRF setup')
+parser.add_argument('--with-views', dest='with_views', default=None, action='store_true',
+                    help='Add templates, static, and IndexView scaffold')
+parser.add_argument('--no-views', dest='with_views', action='store_false',
+                    help='Skip view scaffold')
+parser.add_argument('--install', dest='install_now', default=None, action='store_true',
+                    help='Install with pip immediately after creation')
+parser.add_argument('--no-install', dest='install_now', action='store_false',
+                    help='Skip pip installation')
 args = parser.parse_args()
 
 # Important directories
@@ -49,12 +71,18 @@ def main():
         print("{red}Run this baby from a Django project's root directory.{end}".format(**fancy_text))
         sys.exit()
 
-    if not args.no_input:
+    # Set editor from args or ask user
+    if args.editor != 'nano':
+        editor = args.editor
+    elif not args.no_input:
         user_input = input("{purple}What command should we use to edit files?{end} [nano] ".format(**fancy_text))
         if user_input != '':
             editor = user_input
 
-    if user_yesno("Prefix the new package name with \"django-\"?", default='n'):
+    # Set package prefix from args or ask user
+    if args.add_prefix:
+        package_prefix = 'django-'
+    elif user_yesno("Prefix the new package name with \"django-\"?", default='n'):
         package_prefix = 'django-'
 
     module_name = args.app_name.replace('-', '_')
@@ -104,13 +132,16 @@ def main():
     if user_yesno("Commit now, with message: 'Package the app for reusability'?"):
         call("git add . && git commit -m 'Package the app for reusability'")
 
-    if user_yesno("Add templates/, static/, and urls.py?"):
+    # Determine if we should add views/templates/static
+    add_views = args.with_views if args.with_views is not None else user_yesno("Add templates/, static/, and urls.py?")
+
+    if add_views:
         templates_dir = os.path.join(module_name, 'templates', module_name)
         static_dir = os.path.join(module_name, 'static', module_name)
         mkdirs([templates_dir, static_dir])
         copy_template_file('urls.py', module_name)
 
-    if templates_dir and user_yesno("Add a scaffold IndexView, template, and entry in `urls.py`?"):
+    if add_views and templates_dir and user_yesno("Add a scaffold IndexView, template, and entry in `urls.py`?"):
         copy_template_file(
             'views.py',
             destination_subdirectory=module_name
@@ -120,7 +151,9 @@ def main():
             destination_subdirectory=module_name,
             destination_filename='urls.py'
         )
-        if templates_dir and static_dir and user_yesno(f"""How 'bout all this?
+
+        # Determine if we should add Bootstrap
+        add_bootstrap = args.with_bootstrap if args.with_bootstrap is not None else user_yesno(f"""How 'bout all this?
 
  - Get the latest Bootstrap (bundle)
  - require django-compressor
@@ -129,7 +162,9 @@ def main():
  - add static/css/{module_name}.css
  - add static/js/{module_name}.js
 
- """):
+ """)
+
+        if templates_dir and static_dir and add_bootstrap:
             css_dir = os.path.join(static_dir, 'css')
             js_dir = os.path.join(static_dir, 'js')
             call(f"wget https://raw.githubusercontent.com/twbs/bootstrap/main/dist/css/bootstrap.css -P {css_dir}")
@@ -171,7 +206,9 @@ def main():
             )
 
     # Optionally add DRF scaffold
-    if user_yesno("Would you like to include Django REST Framework (DRF) support?"):
+    add_drf = args.with_drf if args.with_drf is not None else user_yesno("Would you like to include Django REST Framework (DRF) support?")
+
+    if add_drf:
         copy_template_file('serializers.py', destination_subdirectory=module_name)
         copy_template_file('api_views.py', destination_subdirectory=module_name)
         copy_template_file(
@@ -185,7 +222,10 @@ def main():
     print_cyan(f'cd {initial_cwd}')
     os.chdir(initial_cwd)
 
-    if user_yesno(f"Install {module_name} with pip now?"):
+    # Determine if we should install now
+    install = args.install_now if args.install_now is not None else user_yesno(f"Install {module_name} with pip now?")
+
+    if install:
         call(f'pip install -e {repo_dir}')
     else:
         print("You can install it later with:")
