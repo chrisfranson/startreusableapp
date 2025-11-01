@@ -1,6 +1,11 @@
-import sys, os 
-import errno, argparse, subprocess, fileinput
+import sys
+import os
+import errno
+import argparse
+import subprocess
+import fileinput
 from string import Template
+
 
 description = 'This creates a reusable Django app'
 
@@ -41,7 +46,7 @@ if args.no_color:
 def main():
     global editor, package_prefix
     if not os.path.isfile('manage.py'):
-        print("{red}Run this baby from a Django project's root directory.{end}")
+        print("{red}Run this baby from a Django project's root directory.{end}".format(**fancy_text))
         sys.exit()
 
     if not args.no_input:
@@ -74,9 +79,6 @@ def main():
         except OSError:
             print("{red}Couldn't create directory: {project_dir}{end}".format(project_dir=project_dir, **fancy_text))
             sys.exit()
-
-    # print(f"\n\n{startapp_command}\n\n")
-    # exit()
 
     call(startapp_command)
 
@@ -168,6 +170,17 @@ def main():
                 destination_filename='index.html'
             )
 
+    # Optionally add DRF scaffold
+    if user_yesno("Would you like to include Django REST Framework (DRF) support?"):
+        copy_template_file('serializers.py', destination_subdirectory=module_name)
+        copy_template_file('api_views.py', destination_subdirectory=module_name)
+        copy_template_file(
+            'urls-with-drf.py',
+            destination_subdirectory=module_name,
+            destination_filename='urls.py'
+        )
+        update_setup_py_for_drf()
+
     # Bring the user back to where we started
     print_cyan(f'cd {initial_cwd}')
     os.chdir(initial_cwd)
@@ -206,6 +219,8 @@ def copy_template_file(filename, destination_subdirectory='', substitutions=None
     filedata = Template(filedata)
     _substitutions = {
         'app_name': args.app_name,
+        'app_name_capitalized': args.app_name.capitalize(),
+        'app_name_lowercase': args.app_name.lower(),
         'package_prefix': package_prefix,
         'app_header_line': '='*len(args.app_name),
     }
@@ -217,6 +232,23 @@ def copy_template_file(filename, destination_subdirectory='', substitutions=None
         file.write(filedata)
     if ask_to_edit and user_yesno(f"Edit {filename} with {editor} now?"):
         call(f'{editor} {destination_file}')
+
+
+def update_setup_py_for_drf():
+    """Update setup.py to include DRF and drf-spectacular as requirements."""
+    setup_file = os.path.join(repo_dir, 'setup.py')
+    with open(setup_file, 'r') as file:
+        content = file.read()
+
+    install_requires_str = "        'djangorestframework',\n        'drf-spectacular',"
+
+    if "install_requires" in content:
+        content = content.replace("install_requires=[", f"install_requires=[\n{install_requires_str}")
+    else:
+        content = content.replace("setup(", f"setup(\n    install_requires=[\n{install_requires_str}\n    ],")
+
+    with open(setup_file, 'w') as file:
+        file.write(content)
 
 
 def user_yesno(question, default='y'):
