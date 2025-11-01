@@ -41,6 +41,10 @@ parser.add_argument('--with-management-commands', dest='with_mgmt_commands', def
                     help='Include management commands scaffold')
 parser.add_argument('--no-management-commands', dest='with_mgmt_commands', action='store_false',
                     help='Skip management commands scaffold')
+parser.add_argument('--with-precommit', dest='with_precommit', default=None, action='store_true',
+                    help='Include pre-commit hooks and pyproject.toml')
+parser.add_argument('--no-precommit', dest='with_precommit', action='store_false',
+                    help='Skip pre-commit configuration')
 parser.add_argument('--with-views', dest='with_views', default=None, action='store_true',
                     help='Add templates, static, and IndexView scaffold')
 parser.add_argument('--no-views', dest='with_views', action='store_false',
@@ -237,6 +241,13 @@ def main():
             copy_template_file('api_views.py', destination_subdirectory=module_name)
             copy_template_file('urls-with-drf.py', destination_subdirectory=module_name, destination_filename='urls.py')
             update_setup_py_for_drf()
+
+    # Optionally add pre-commit hooks and pyproject.toml
+    add_precommit = args.with_precommit if args.with_precommit is not None else user_yesno("Would you like to include pre-commit hooks and pyproject.toml?")
+
+    if add_precommit:
+        copy_template_file('.pre-commit-config.yaml')
+        copy_template_file('pyproject.toml')
 
     # Optionally add management commands scaffold
     add_mgmt_commands = args.with_mgmt_commands if args.with_mgmt_commands is not None else user_yesno("Would you like to include management commands scaffold?")
